@@ -16,7 +16,7 @@ class ProductosController extends Controller
         ]);
     }
 
-    public function new()
+    public function new ()
     {
         return view('productos.nuevo');
     }
@@ -40,11 +40,10 @@ class ProductosController extends Controller
         $guardar->categoria = $request->categoria;
         $guardar->stock = $request->stock;
         if ($guardar->save()) {
-            $productos = Producto::all();
-
-            return view('productos.index', [
-                'productos' => $productos,
-            ]);
+            return back()->with(['mensaje' => 'Producto registrado Con Exito', 'tipo' => 'success']);
+        }
+        else {
+            return back()->with(['mensaje' => 'Error al registrar el producto', 'tipo' => 'danger']);
         }
     }
 
@@ -87,10 +86,22 @@ class ProductosController extends Controller
 
         if ($productos->delete()) {
             $xhr_response = 200;
-        } else {
+        }
+        else {
             $xhr_response = 400;
         }
 
         return $xhr_response;
+    }
+
+    public function eliminar(Producto $producto)
+    {
+        $producto->delete();
+
+        $productos = Producto::all();
+
+            return view('productos.index', [
+                'productos' => $productos,
+            ]);
     }
 }

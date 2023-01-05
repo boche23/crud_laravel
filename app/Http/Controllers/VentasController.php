@@ -10,10 +10,10 @@ class VentasController extends Controller
 {
     public function index()
     {
-       
         $ventas = venta::select('ventas.*', 'productos.*')
-                ->join('productos', 'ventas.id_producto', '=', 'productos.id')
-                ->get();
+            ->join('productos', 'ventas.id_producto', '=', 'productos.id')
+            ->get();
+
         return view('ventas.index', [
             'ventas' => $ventas,
         ]);
@@ -21,8 +21,9 @@ class VentasController extends Controller
 
     public function new()
     {
-    $ventas = Producto::all();
-    return view('ventas.nuevo', [
+        $ventas = Producto::all();
+
+        return view('ventas.nuevo', [
             'ventas' => $ventas,
         ]);
     }
@@ -33,22 +34,27 @@ class VentasController extends Controller
             'id_producto' => 'required',
             'cantidad' => 'required',
         ]);
-        $producto = Producto::select(['productos.*'])
-        ->where('productos.id', $request->id_producto)
-        ->first();
-        $producto->stock = $producto->stock - $request->cantidad ;
-        $producto->update();
-        $guardar = new Venta();
-        $guardar->id_producto = $request->id_producto;
-        $guardar->cantidad = $request->cantidad;
-      
-        if ($guardar->save()) {
-            $ventas = venta::select('ventas.*', 'productos.*')
-                ->join('productos', 'ventas.id_producto', '=', 'productos.id')
-                ->get();
-        return view('ventas.index', [
-            'ventas' => $ventas,
-        ]);
+        if ($request->cantidad > 0) {
+            # code...
+            $producto = Producto::select(['productos.*'])
+                ->where('productos.id', $request->id_producto)
+                ->first();
+            $producto->stock = $producto->stock - $request->cantidad;
+            if ($producto->stock > 0) {
+                $producto->update();
+                $guardar = new Venta();
+                $guardar->id_producto = $request->id_producto;
+                $guardar->cantidad = $request->cantidad;
+
+                if ($guardar->save()) {
+                    return back()->with(['mensaje' => 'Venta Registrada con Exito', 'tipo' => 'success']);
+                }
+            } else {
+                return back()->with(['mensaje' => 'No es posible realizar la venta, Cantidad de Stock Insuficiente', 'tipo' => 'danger']);
+            }
+        } else {
+            # code...
+            return back()->with(['mensaje' => 'Error! la cantidad a vender  debe ser mayor a cero', 'tipo' => 'danger']);
         }
     }
 }
